@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  image-gen:
+    build: .
+    container_name: image-gen-api
+    ports:
+      - "8000:8000"
+    environment:
+      # LiteLLM Configuration (Primary)
+      - LITELLM_BASE_URL=${LITELLM_BASE_URL:-}
+      - LITELLM_API_KEY=${LITELLM_API_KEY:-}
+
+      # Direct Provider API Keys (Fallback)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+
+      # Storage Configuration
+      - STORAGE_PATH=/app/generated_images
+      - BASE_URL=${BASE_URL:-http://localhost:8000}
+
+      # Security (Optional)
+      - API_BEARER_TOKEN=${API_BEARER_TOKEN:-}
+
+      # Model Registry
+      - MODEL_CACHE_TTL=${MODEL_CACHE_TTL:-3600}
+    volumes:
+      - ./generated_images:/app/generated_images
+    restart: unless-stopped
+    networks:
+      - image-gen-network
+
+networks:
+  image-gen-network:
+    driver: bridge
