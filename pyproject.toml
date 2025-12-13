@@ -1,6 +1,6 @@
 [project]
 name = "image-generation-api"
-version = "1.0.0"
+version = "0.1.0"
 description = "Image Generation OpenAPI Server with LiteLLM integration"
 requires-python = ">=3.11"
 dependencies = [
@@ -119,3 +119,22 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
 ]
+
+# Semantic Release configuration
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+build_command = ""
+commit_message = "chore(release): {version}"
+tag_format = "v{version}"
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.commit_parser_options]
+# feat: → minor (0.x.0)
+# fix:, perf: → patch (0.0.x)
+# feat!:, fix!:, BREAKING CHANGE: → major (x.0.0)
+allowed_tags = ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]

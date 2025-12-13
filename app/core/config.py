@@ -1,6 +1,19 @@
+import tomllib
+from pathlib import Path
 from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_version() -> str:
+    """Get version from pyproject.toml."""
+    try:
+        pyproject = Path(__file__).parent.parent.parent / "pyproject.toml"
+        with open(pyproject, "rb") as f:
+            data = tomllib.load(f)
+        return data["project"]["version"]
+    except Exception:
+        return "0.1.0"
 
 
 class Settings(BaseSettings):
@@ -14,7 +27,7 @@ class Settings(BaseSettings):
 
     # API Configuration
     API_TITLE: str = "Image Generation API"
-    API_VERSION: str = "1.0.0"
+    API_VERSION: str = get_version()
     API_DESCRIPTION: str = (
         "Generate images using OpenAI DALL-E and Google Gemini via LiteLLM proxy "
         "with fallback to direct API calls. Supports SSE progress streaming."
