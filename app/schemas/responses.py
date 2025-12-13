@@ -8,7 +8,17 @@ class ImageResponse(BaseModel):
     Response schema for image generation.
     """
 
-    image_url: str = Field(..., description="URL to access the generated image")
+    image_url: Optional[str] = Field(
+        default=None, description="URL to access the generated image (when response_format='url')"
+    )
+
+    image_base64: Optional[str] = Field(
+        default=None, description="Base64 encoded image data (when response_format='base64')"
+    )
+
+    mime_type: Optional[str] = Field(
+        default=None, description="MIME type of the image (e.g., 'image/png')"
+    )
 
     prompt: str = Field(..., description="The prompt used for generation")
 

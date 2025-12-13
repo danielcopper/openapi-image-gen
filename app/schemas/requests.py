@@ -54,6 +54,15 @@ class ImageRequest(BaseModel):
         description="Number of images to generate (1-4). Some models only support n=1",
     )
 
+    response_format: Literal["url", "base64"] = Field(
+        default="url",
+        description=(
+            "Response format for generated images. "
+            "Use 'base64' for chat integrations (returns image data directly, can be displayed inline). "
+            "Use 'url' only for web applications that can fetch external URLs."
+        ),
+    )
+
     stream: bool = Field(default=False, description="Enable SSE streaming for progress updates")
 
 

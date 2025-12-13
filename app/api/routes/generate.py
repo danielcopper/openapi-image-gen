@@ -1,4 +1,6 @@
+import base64
 import logging
+from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -66,6 +68,36 @@ async def generate_image(request: ImageRequest, _: None = Depends(verify_token))
     # Return first URL (or could return all URLs)
     if not urls:
         raise HTTPException(status_code=500, detail="No images generated")
+
+    # Handle response format
+    if request.response_format == "base64":
+        # Extract filename from URL and read file
+        image_filename = urls[0].split("/")[-1]
+        image_path = Path(settings.STORAGE_PATH) / image_filename
+
+        if not image_path.exists():
+            raise HTTPException(status_code=500, detail="Generated image file not found")
+
+        with open(image_path, "rb") as f:
+            image_data = base64.b64encode(f.read()).decode("utf-8")
+
+        # Determine mime type from extension
+        ext = image_path.suffix.lower()
+        mime_types = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
+        mime_type = mime_types.get(ext, "image/png")
+
+        return ImageResponse(
+            image_base64=image_data,
+            mime_type=mime_type,
+            prompt=request.prompt,
+            model=model,
+            provider=request.provider,
+            metadata={
+                "aspect_ratio": request.aspect_ratio,
+                "quality": request.quality,
+                "n": len(urls),
+            },
+        )
 
     return ImageResponse(
         image_url=urls[0],
