@@ -1,7 +1,7 @@
 import base64
 import logging
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
@@ -17,6 +17,10 @@ from app.services.storage_service import storage_service
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/edit", tags=["Image Editing"])
+
+# Type aliases for form fields
+ImageFile = Annotated[UploadFile | None, File(description="Image file to edit")]
+MaskFile = Annotated[UploadFile | None, File(description="Mask image (transparent areas will be edited)")]
 
 
 @router.post(
@@ -36,9 +40,9 @@ async def edit_image(
         "litellm", description="Provider to use for editing"
     ),
     model: str | None = Form(None, description="Model ID (optional, uses default if not set)"),
-    image: UploadFile | None = File(None, description="Image file to edit"),
+    image: ImageFile = None,
     image_url: str | None = Form(None, description="URL to existing image (alternative to upload)"),
-    mask: UploadFile | None = File(None, description="Mask image (transparent areas will be edited)"),
+    mask: MaskFile = None,
     n: int = Form(1, ge=1, le=4, description="Number of variations to generate"),
     response_format: Literal["url", "base64", "markdown"] = Form(
         "url", description="Response format"
@@ -63,10 +67,10 @@ async def edit_image(
         else:
             image_bytes = await storage_service.get_image(image_url)
     except FileNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except Exception as e:
         logger.error(f"Failed to load image: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to load image: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to load image: {str(e)}") from None
 
     # Load mask bytes if provided
     mask_bytes = None
@@ -81,7 +85,7 @@ async def edit_image(
     try:
         service = _get_service(provider)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
     # Edit image
     try:
@@ -104,7 +108,7 @@ async def edit_image(
             )
     except Exception as e:
         logger.error(f"Edit failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Edit failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Edit failed: {str(e)}") from None
 
     if not urls:
         raise HTTPException(status_code=500, detail="No images generated")

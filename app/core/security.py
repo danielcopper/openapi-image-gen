@@ -1,14 +1,18 @@
+from typing import Annotated
 
-from fastapi import HTTPException, Security, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
 
 security = HTTPBearer(auto_error=False)
 
+# Type alias for security dependency
+SecurityCredentials = Annotated[HTTPAuthorizationCredentials | None, Depends(security)]
+
 
 async def verify_token(
-    credentials: HTTPAuthorizationCredentials | None = Security(security),
+    credentials: SecurityCredentials,
 ) -> None:
     """
     Verify Bearer token if configured.

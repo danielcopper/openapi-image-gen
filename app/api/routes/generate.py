@@ -49,7 +49,7 @@ async def generate_image(request: ImageRequest, _: None = Depends(verify_token))
     try:
         service = _get_service(request.provider)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
     # Generate images
     try:
@@ -62,7 +62,7 @@ async def generate_image(request: ImageRequest, _: None = Depends(verify_token))
         )
     except Exception as e:
         logger.error(f"Generation failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}") from None
 
     # Return first URL (or could return all URLs)
     if not urls:
@@ -152,7 +152,7 @@ async def generate_image_stream(request: ImageRequest, _: None = Depends(verify_
     try:
         service = _get_service(request.provider)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
     # Return SSE stream
     return StreamingResponse(
@@ -198,7 +198,7 @@ async def generate_image_preview(request: ImageRequest, _: None = Depends(verify
     try:
         service = _get_service(request.provider)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
     # Generate images
     try:
@@ -211,7 +211,7 @@ async def generate_image_preview(request: ImageRequest, _: None = Depends(verify
         )
     except Exception as e:
         logger.error(f"Generation failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}") from None
 
     if not urls:
         raise HTTPException(status_code=500, detail="No images generated")

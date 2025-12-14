@@ -48,11 +48,13 @@ async def list_models(_: None = Depends(verify_token)) -> ModelListResponse:
     include_in_schema=False,  # Admin operation, not for function calling
 )
 async def refresh_models(
-    request: ModelRefreshRequest = ModelRefreshRequest(), _: None = Depends(verify_token)
+    request: ModelRefreshRequest | None = None, _: None = Depends(verify_token)
 ) -> ModelListResponse:
     """
     Refresh model list from LiteLLM.
     """
+    if request is None:
+        request = ModelRefreshRequest()
     logger.info(f"Refreshing models (force={request.force})")
 
     models = await model_registry.load_models(force=request.force)
