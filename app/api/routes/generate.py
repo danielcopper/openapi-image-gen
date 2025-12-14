@@ -1,7 +1,6 @@
 import base64
 import logging
 from pathlib import Path
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -89,6 +88,22 @@ async def generate_image(request: ImageRequest, _: None = Depends(verify_token))
         return ImageResponse(
             image_base64=image_data,
             mime_type=mime_type,
+            prompt=request.prompt,
+            model=model,
+            provider=request.provider,
+            metadata={
+                "aspect_ratio": request.aspect_ratio,
+                "quality": request.quality,
+                "n": len(urls),
+            },
+        )
+
+    if request.response_format == "markdown":
+        # Return ready-to-use markdown with image URL
+        markdown = f"![Generated image]({urls[0]})"
+        return ImageResponse(
+            markdown=markdown,
+            image_url=urls[0],
             prompt=request.prompt,
             model=model,
             provider=request.provider,

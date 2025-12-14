@@ -1,6 +1,5 @@
 import logging
 import time
-from typing import Dict, List, Optional
 
 import httpx
 
@@ -17,7 +16,7 @@ class ModelRegistry:
     """
 
     # Model capabilities database (fallback for known models)
-    KNOWN_CAPABILITIES: Dict[str, ModelCapabilities] = {
+    KNOWN_CAPABILITIES: dict[str, ModelCapabilities] = {
         "dall-e-2": ModelCapabilities(
             supports_quality=False, supports_aspect_ratios=["1:1"], max_images=4
         ),
@@ -40,8 +39,8 @@ class ModelRegistry:
     }
 
     def __init__(self):
-        self._models: List[ModelInfo] = []
-        self._cache_timestamp: Optional[float] = None
+        self._models: list[ModelInfo] = []
+        self._cache_timestamp: float | None = None
 
     @property
     def cache_valid(self) -> bool:
@@ -52,14 +51,14 @@ class ModelRegistry:
         return age < settings.MODEL_CACHE_TTL
 
     @property
-    def cache_age(self) -> Optional[int]:
+    def cache_age(self) -> int | None:
         """Get cache age in seconds."""
         if not self._cache_timestamp:
             return None
         return int(time.time() - self._cache_timestamp)
 
     @property
-    def cache_expires_in(self) -> Optional[int]:
+    def cache_expires_in(self) -> int | None:
         """Get seconds until cache expiration."""
         if not self._cache_timestamp:
             return None
@@ -69,7 +68,7 @@ class ModelRegistry:
         remaining = settings.MODEL_CACHE_TTL - age
         return max(0, remaining)
 
-    async def load_models(self, force: bool = False) -> List[ModelInfo]:
+    async def load_models(self, force: bool = False) -> list[ModelInfo]:
         """
         Load available models from LiteLLM or fallback to static list.
 
@@ -104,7 +103,7 @@ class ModelRegistry:
 
         return self._models
 
-    async def _load_from_litellm(self) -> List[ModelInfo]:
+    async def _load_from_litellm(self) -> list[ModelInfo]:
         """
         Load models from LiteLLM /v1/models endpoint.
         """
@@ -135,7 +134,7 @@ class ModelRegistry:
 
         return models
 
-    def _get_static_models(self) -> List[ModelInfo]:
+    def _get_static_models(self) -> list[ModelInfo]:
         """
         Return static list of known models based on available API keys.
         """
@@ -201,13 +200,13 @@ class ModelRegistry:
             max_images=4,
         )
 
-    def get_models(self) -> List[ModelInfo]:
+    def get_models(self) -> list[ModelInfo]:
         """
         Get cached models (non-async).
         """
         return self._models
 
-    def get_model(self, model_id: str) -> Optional[ModelInfo]:
+    def get_model(self, model_id: str) -> ModelInfo | None:
         """
         Get specific model info.
         """

@@ -1,6 +1,5 @@
 import tomllib
 from pathlib import Path
-from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -34,19 +33,19 @@ class Settings(BaseSettings):
     )
 
     # LiteLLM Configuration (Primary)
-    LITELLM_BASE_URL: Optional[str] = None
-    LITELLM_API_KEY: Optional[str] = None
+    LITELLM_BASE_URL: str | None = None
+    LITELLM_API_KEY: str | None = None
 
     # Direct Provider API Keys (Fallback)
-    OPENAI_API_KEY: Optional[str] = None
-    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
 
     # Storage Configuration
     STORAGE_PATH: str = "./generated_images"
     BASE_URL: str = "http://localhost:8000"
 
     # Security (Optional)
-    API_BEARER_TOKEN: Optional[str] = None
+    API_BEARER_TOKEN: str | None = None
 
     # Model Registry
     MODEL_CACHE_TTL: int = 3600  # Cache models for 1 hour

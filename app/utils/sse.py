@@ -1,7 +1,8 @@
 import json
 import logging
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator, Awaitable, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

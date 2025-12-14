@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -9,7 +8,7 @@ security = HTTPBearer(auto_error=False)
 
 
 async def verify_token(
-    credentials: Optional[HTTPAuthorizationCredentials] = Security(security),
+    credentials: HTTPAuthorizationCredentials | None = Security(security),
 ) -> None:
     """
     Verify Bearer token if configured.

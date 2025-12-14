@@ -1,6 +1,6 @@
 import base64
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from openai import OpenAI
 
@@ -41,7 +41,7 @@ class LiteLLMService:
         aspect_ratio: str = "1:1",
         quality: str = "standard",
         n: int = 1,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate images using LiteLLM proxy.
 
@@ -62,7 +62,7 @@ class LiteLLMService:
         size = self._get_size(aspect_ratio)
 
         # Build request parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": model,
             "prompt": prompt,
             "n": n,

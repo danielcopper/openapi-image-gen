@@ -1,6 +1,6 @@
 import base64
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from openai import OpenAI
 
@@ -53,7 +53,7 @@ class OpenAIService:
         aspect_ratio: str = "1:1",
         quality: str = "standard",
         n: int = 1,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate images using OpenAI API directly.
         """
@@ -66,7 +66,7 @@ class OpenAIService:
         model_info = model_registry.get_model(model)
 
         # Build request parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": model,
             "prompt": prompt,
             "n": n,

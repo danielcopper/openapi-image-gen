@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from google import genai
 from google.genai import types
@@ -36,7 +35,7 @@ class GeminiService:
         aspect_ratio: str = "1:1",
         quality: str = "standard",  # Not used for Gemini
         n: int = 1,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate images using Google Gemini API directly.
         """

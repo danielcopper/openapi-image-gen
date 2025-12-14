@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 class ImageResponse(BaseModel):
@@ -8,16 +8,21 @@ class ImageResponse(BaseModel):
     Response schema for image generation.
     """
 
-    image_url: Optional[str] = Field(
+    image_url: str | None = Field(
         default=None, description="URL to access the generated image (when response_format='url')"
     )
 
-    image_base64: Optional[str] = Field(
+    image_base64: str | None = Field(
         default=None, description="Base64 encoded image data (when response_format='base64')"
     )
 
-    mime_type: Optional[str] = Field(
+    mime_type: str | None = Field(
         default=None, description="MIME type of the image (e.g., 'image/png')"
+    )
+
+    markdown: str | None = Field(
+        default=None,
+        description="Ready-to-use markdown with image URL (when response_format='markdown')",
     )
 
     prompt: str = Field(..., description="The prompt used for generation")
@@ -26,7 +31,7 @@ class ImageResponse(BaseModel):
 
     provider: str = Field(..., description="The provider used (litellm, openai, gemini)")
 
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata about the generation"
     )
 
@@ -40,7 +45,7 @@ class ModelCapabilities(BaseModel):
         default=False, description="Whether model supports quality parameter"
     )
 
-    supports_aspect_ratios: List[str] = Field(
+    supports_aspect_ratios: list[str] = Field(
         default_factory=lambda: ["1:1"], description="Supported aspect ratios"
     )
 
@@ -66,11 +71,11 @@ class ModelListResponse(BaseModel):
     Response schema for listing available models.
     """
 
-    models: List[ModelInfo] = Field(..., description="List of available models")
+    models: list[ModelInfo] = Field(..., description="List of available models")
 
     cached: bool = Field(..., description="Whether results are from cache")
 
-    cache_expires_in: Optional[int] = Field(
+    cache_expires_in: int | None = Field(
         default=None, description="Seconds until cache expiration"
     )
 

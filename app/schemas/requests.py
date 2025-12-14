@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -24,7 +24,7 @@ class ImageRequest(BaseModel):
         ),
     )
 
-    model: Optional[str] = Field(
+    model: str | None = Field(
         default=None,
         description=(
             "Model ID for image generation. Call GET /models to see all available models. "
@@ -54,12 +54,13 @@ class ImageRequest(BaseModel):
         description="Number of images to generate (1-4). Some models only support n=1",
     )
 
-    response_format: Literal["url", "base64"] = Field(
+    response_format: Literal["url", "base64", "markdown"] = Field(
         default="url",
         description=(
             "Response format for generated images. "
-            "Use 'base64' for chat integrations (returns image data directly, can be displayed inline). "
-            "Use 'url' only for web applications that can fetch external URLs."
+            "'url': Returns image URL (for web apps). "
+            "'base64': Returns base64 encoded data (for offline/serverless). "
+            "'markdown': Returns ready-to-use markdown with image URL (for chat/LLM integrations)."
         ),
     )
 
