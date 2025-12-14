@@ -71,6 +71,57 @@ class GeminiService:
         logger.info(f"Generated {len(urls)} image(s) successfully")
         return urls
 
+    async def edit_image(
+        self,
+        image: bytes,
+        prompt: str,
+        model: str,
+        n: int = 1,
+    ) -> list[str]:
+        """
+        Edit an image using Gemini's prompt-based editing.
+
+        Args:
+            image: Source image bytes
+            prompt: Natural language description of the edit
+            model: Model to use
+            n: Number of variations to generate
+
+        Returns:
+            List of URLs to edited images
+        """
+        logger.info(f"Editing image with {model} via Gemini direct")
+
+        urls = []
+
+        # Create image part from bytes
+        image_part = types.Part.from_bytes(data=image, mime_type="image/png")
+
+        # Gemini generates one image per request
+        for i in range(n):
+            logger.debug(f"Generating edit {i + 1}/{n}")
+
+            response = self.client.models.generate_content(
+                model=model,
+                contents=[image_part, prompt],
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],
+                ),
+            )
+
+            # Extract image from response
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, "inline_data") and part.inline_data:
+                    image_bytes = part.inline_data.data
+                    mime_type = part.inline_data.mime_type
+                    extension = mime_type.split("/")[-1] if "/" in mime_type else "png"
+
+                    url = await storage_service.save_image(image_bytes, extension)
+                    urls.append(url)
+
+        logger.info(f"Edited image, generated {len(urls)} result(s)")
+        return urls
+
 
 def get_gemini_service() -> GeminiService:
     """
