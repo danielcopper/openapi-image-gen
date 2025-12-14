@@ -1,17 +1,15 @@
 # Image Generation OpenAPI Server
 
-Production-ready OpenAPI server for AI image generation with LiteLLM proxy integration (cost tracking) and direct API fallback support for OpenAI DALL-E and Google Gemini models.
+OpenAPI server for AI image generation and editing. Supports LiteLLM proxy (for cost tracking) and direct API access to OpenAI and Google Gemini.
 
 ## Features
 
-- **LiteLLM Integration**: Primary provider with automatic cost tracking and unified API
-- **Multi-Provider Support**: OpenAI (DALL-E 3, GPT-Image-1) + Google Gemini (Imagen 3.0, Flash)
-- **Dynamic Model Discovery**: Auto-loads available models from LiteLLM
-- **SSE Streaming**: Real-time progress updates during generation
-- **Flexible Responses**: JSON, SSE stream, or HTML preview
-- **Local Storage**: Images saved locally and served via static files
-- **Comprehensive API**: Full OpenAPI/Swagger documentation
-- **Production Ready**: Docker support, health checks, authentication
+- **Image Generation**: Create images from text prompts
+- **Image Editing**: Edit existing images with mask-based inpainting (OpenAI) or prompt-based editing (Gemini)
+- **Multi-Provider**: OpenAI (DALL-E 3, GPT-Image-1) and Google Gemini
+- **LiteLLM Integration**: Unified API with cost tracking
+- **Dynamic Models**: Auto-discovers available models from LiteLLM
+- **Multiple Response Formats**: URL, base64, or markdown
 
 ## Quick Start
 
@@ -62,51 +60,48 @@ docker-compose up -d
 
 ## API Examples
 
-### Generate Image (Standard)
+### Generate Image
 
 ```bash
 curl -X POST "http://localhost:8000/generate" \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt": "A serene mountain landscape at sunset",
-    "provider": "litellm",
+    "prompt": "A mountain landscape at sunset",
     "model": "dall-e-3",
-    "aspect_ratio": "16:9",
-    "quality": "hd"
+    "aspect_ratio": "16:9"
   }'
 ```
 
-### Generate with SSE Streaming
+### Edit Image (Mask-based, OpenAI)
 
 ```bash
-curl -N "http://localhost:8000/generate-stream" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "A futuristic city skyline",
-    "aspect_ratio": "9:16"
-  }'
+curl -X POST "http://localhost:8000/edit" \
+  -F "image=@photo.png" \
+  -F "mask=@mask.png" \
+  -F "prompt=Replace the sky with a sunset" \
+  -F "provider=openai" \
+  -F "model=gpt-image-1"
 ```
 
-### Python Client
+### Edit Image (Prompt-based, Gemini)
 
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/generate",
-    json={
-        "prompt": "A cute cat wearing sunglasses",
-        "provider": "litellm",  # or "openai", "gemini"
-        "aspect_ratio": "1:1",
-        "n": 1
-    }
-)
-
-result = response.json()
-print(f"Image URL: {result['image_url']}")
+```bash
+curl -X POST "http://localhost:8000/edit" \
+  -F "image=@photo.png" \
+  -F "prompt=Make the background more colorful" \
+  -F "provider=gemini"
 ```
 
-### List Available Models
+### Edit via URL Reference
+
+```bash
+curl -X POST "http://localhost:8000/edit" \
+  -F "image_url=http://localhost:8000/images/abc123.png" \
+  -F "prompt=Add a hat to the person" \
+  -F "provider=gemini"
+```
+
+### List Models
 
 ```bash
 curl "http://localhost:8000/models"
@@ -136,16 +131,19 @@ GEMINI_API_KEY=...
 
 ### OpenAI
 
-- **dall-e-3**: HD quality, multiple aspect ratios, n=1 only
-- **gpt-image-1**: Newest model, multiple sizes
-- **dall-e-2**: Square only, fast generation
+| Model | Generation | Editing | Notes |
+|-------|------------|---------|-------|
+| dall-e-3 | Yes | No | HD quality, multiple aspect ratios |
+| gpt-image-1 | Yes | Yes (mask) | Fast, supports inpainting |
+| dall-e-2 | Yes | Yes (mask) | Square only |
 
 ### Google Gemini
 
-- **gemini-2.0-flash-preview-image-generation**: Fast generation
-- **imagen-3.0-generate-002**: High quality
+| Model | Generation | Editing | Notes |
+|-------|------------|---------|-------|
+| gemini-2.0-flash-preview-image-generation | Yes | Yes (prompt) | Fast, prompt-based editing |
 
-See [CONFIGURATION.md](CONFIGURATION.md) for detailed model capabilities.
+See [CONFIGURATION.md](CONFIGURATION.md) for details.
 
 ## Open WebUI Integration
 
@@ -161,20 +159,21 @@ For admin/global tools, configure in Admin Settings with server-accessible URL.
 
 ### Image Generation
 
-- `POST /generate` - Generate image (JSON response)
-- `POST /generate-stream` - Generate with SSE progress
-- `POST /generate-preview` - Generate with HTML preview
+- `POST /generate` - Generate image from prompt
 
-### Model Management
+### Image Editing
+
+- `POST /edit` - Edit existing image (supports file upload or URL reference)
+
+### Models
 
 - `GET /models` - List available models
 - `POST /models/refresh` - Refresh model list from LiteLLM
 
-### Health & Info
+### Info
 
 - `GET /health` - Health check + provider status
-- `GET /` - API information
-- `GET /docs` - Interactive API documentation
+- `GET /docs` - API documentation
 
 ## Configuration
 
@@ -200,36 +199,19 @@ With coverage:
 pytest --cov=app --cov-report=html
 ```
 
-## Development
+## Project Structure
 
-Project structure:
-
-```txt
+```
 app/
-├── main.py              # FastAPI application
-├── core/                # Configuration & utilities
-├── api/routes/          # API endpoints
-├── schemas/             # Pydantic models
-├── services/            # Business logic
-└── utils/               # Helpers
+├── main.py              # FastAPI app
+├── core/                # Config, security
+├── api/routes/          # Endpoints (generate, edit, models, health)
+├── schemas/             # Request/response models
+└── services/            # Provider integrations
 
-tests/                   # Test suite
+tests/                   # Tests
 ```
 
 ## License
 
 MIT
-
-## Contributing
-
-Contributions welcome! Please ensure:
-
-- Tests pass (`pytest`)
-- Code follows project style
-- Documentation updated
-
-## Support
-
-- Issues: GitHub Issues
-- Docs: `/docs` endpoint
-- Health: `/health` endpoint

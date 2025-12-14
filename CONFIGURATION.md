@@ -37,11 +37,18 @@ Complete configuration reference for the Image Generation API.
 - Default: `./generated_images`
 - Docker: Use volume mount (e.g., `/app/generated_images`)
 
-**`BASE_URL`**
+**`IMAGE_BASE_URL`**
 - Public base URL for serving images
 - Default: `http://localhost:8000`
-- Production: Your domain (e.g., `https://api.example.com`)
+- Example: `https://api.example.com`
 - Used to construct full image URLs
+
+### Model Defaults
+
+**`DEFAULT_MODEL`**
+- Default model for generation/editing when not specified in request
+- Example: `gpt-image-1`, `dall-e-3`
+- Optional - if not set, first available model is used
 
 ### Security
 
@@ -76,22 +83,22 @@ Complete configuration reference for the Image Generation API.
 ### OpenAI Models
 
 **dall-e-2**
-- Aspect Ratios: `1:1` only (all others fallback to square)
+- Aspect Ratios: `1:1` only
 - Quality: Not supported
 - Max Images (n): 4
-- Sizes: 1024x1024
+- Editing: Yes (mask-based)
 
 **dall-e-3**
 - Aspect Ratios: `1:1`, `16:9`, `9:16`
 - Quality: `standard`, `hd`
 - Max Images (n): 1
-- Sizes: 1024x1024, 1792x1024, 1024x1792
+- Editing: No
 
 **gpt-image-1**
 - Aspect Ratios: `1:1`, `16:9`, `9:16`
 - Quality: Not supported
 - Max Images (n): 4
-- Sizes: 1024x1024, 1536x1024, 1024x1536
+- Editing: Yes (mask-based)
 
 ### Google Gemini Models
 
@@ -99,13 +106,7 @@ Complete configuration reference for the Image Generation API.
 - Aspect Ratios: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`
 - Quality: Not supported
 - Max Images (n): 4
-- Fast generation
-
-**imagen-3.0-generate-002**
-- Aspect Ratios: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`
-- Quality: Not supported
-- Max Images (n): 4
-- High quality output
+- Editing: Yes (prompt-based)
 
 ## Provider Setup
 
@@ -204,6 +205,35 @@ Constraints:
 - dall-e-3: max 1
 - Others: max 4
 
+## Image Editing
+
+The `/edit` endpoint supports two editing modes:
+
+### Mask-based Editing (OpenAI)
+
+Used with `dall-e-2` and `gpt-image-1`. Requires:
+- `image`: Source image (upload or URL)
+- `mask`: PNG with transparent areas marking regions to edit
+- `prompt`: Description of what to generate in masked area
+
+The mask should have transparent (alpha=0) pixels where editing should occur.
+
+### Prompt-based Editing (Gemini)
+
+Used with `gemini-2.0-flash-preview-image-generation`. Requires:
+- `image`: Source image (upload or URL)
+- `prompt`: Natural language description of the edit
+
+No mask needed - Gemini understands what to change from the prompt alone.
+
+### Input Methods
+
+Images can be provided two ways:
+- **File upload**: `image=@photo.png` (multipart form)
+- **URL reference**: `image_url=http://localhost:8000/images/abc.png`
+
+URL reference works with previously generated images or external URLs.
+
 ## Authentication
 
 ### No Authentication
@@ -245,7 +275,7 @@ volumes:
 For reverse proxy or custom domain:
 
 ```env
-BASE_URL=https://api.yourdomain.com
+IMAGE_BASE_URL=https://api.yourdomain.com
 ```
 
 Images will be served at: `https://api.yourdomain.com/images/filename.png`
