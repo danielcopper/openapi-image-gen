@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import generate, health, models
+from app.api.routes import edit, generate, health, models
 from app.core.config import settings
 from app.services.model_registry import model_registry
 
@@ -75,6 +75,7 @@ app.mount("/images", StaticFiles(directory=settings.STORAGE_PATH), name="images"
 
 # Register routers
 app.include_router(generate.router)
+app.include_router(edit.router)
 app.include_router(models.router)
 app.include_router(health.router)
 
