@@ -305,6 +305,10 @@ def _get_default_model(provider: str) -> str:
     """
     Get default model for provider based on available models.
     """
+    # Check if DEFAULT_MODEL is configured
+    if settings.DEFAULT_MODEL:
+        return settings.DEFAULT_MODEL
+
     models = model_registry.get_models()
 
     # Filter models for this provider
