@@ -50,6 +50,20 @@ Complete configuration reference for the Image Generation API.
 - Example: `gpt-image-1`, `dall-e-3`
 - Optional - if not set, first available model is used
 
+### Open WebUI Integration
+
+**`OPENWEBUI_API_URL`**
+- Open WebUI instance URL
+- Example: `https://chat.mydomain.com`
+- When set (with API key), images are uploaded to Open WebUI's file storage
+
+**`OPENWEBUI_API_KEY`**
+- API key from Open WebUI
+- Get from: Open WebUI Settings > Account > API Keys
+- Required together with `OPENWEBUI_API_URL`
+
+When both are configured, images are automatically uploaded to Open WebUI. This ensures images work from anywhere - no more URL accessibility issues with Docker or external access.
+
 ### Security
 
 **`API_BEARER_TOKEN`**

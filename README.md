@@ -8,8 +8,8 @@ OpenAPI server for AI image generation and editing. Supports LiteLLM proxy (for 
 - **Image Editing**: Edit existing images with mask-based inpainting (OpenAI) or prompt-based editing (Gemini)
 - **Multi-Provider**: OpenAI (DALL-E 3, GPT-Image-1) and Google Gemini
 - **LiteLLM Integration**: Unified API with cost tracking
+- **Open WebUI Integration**: Auto-upload images to Open WebUI's file storage
 - **Dynamic Models**: Auto-discovers available models from LiteLLM
-- **Multiple Response Formats**: URL, base64, or markdown
 
 ## Quick Start
 
