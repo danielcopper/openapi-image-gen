@@ -28,7 +28,10 @@ async def health_check() -> HealthResponse:
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 url = f"{settings.LITELLM_BASE_URL.rstrip('/')}/health"
-                response = await client.get(url)
+                headers = {}
+                if settings.LITELLM_API_KEY:
+                    headers["Authorization"] = f"Bearer {settings.LITELLM_API_KEY}"
+                response = await client.get(url, headers=headers)
                 litellm_available = response.status_code == 200
         except Exception as e:
             logger.warning(f"LiteLLM health check failed: {e}")
