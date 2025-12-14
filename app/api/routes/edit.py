@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.core.config import settings
 from app.core.security import verify_token
+from app.schemas.requests import ImageEditRequest
 from app.schemas.responses import ImageResponse
 from app.services.gemini_service import get_gemini_service
 from app.services.litellm_service import get_litellm_service
@@ -157,6 +158,75 @@ async def edit_image(
             "all_urls": urls if len(urls) > 1 else None,
             "n": len(urls),
             "edit": True,
+        },
+    )
+
+
+@router.post(
+    "/json",
+    response_model=ImageResponse,
+    operation_id="edit_image_json",
+    summary="Edit image (JSON)",
+    description=(
+        "Edit an existing image using a JSON request body. "
+        "This endpoint is designed for LLM tool use - provide the image_url "
+        "from a previous generate_image response. Uses prompt-based editing."
+    ),
+)
+async def edit_image_json(
+    request: ImageEditRequest,
+    _: None = Depends(verify_token),
+) -> ImageResponse:
+    """
+    Edit an image using JSON request body (LLM-friendly endpoint).
+    """
+    logger.info(f"Edit JSON request: provider={request.provider}, model={request.model}")
+
+    # Load image from URL
+    try:
+        image_bytes = await storage_service.get_image(request.image_url)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from None
+    except Exception as e:
+        logger.error(f"Failed to load image: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to load image: {str(e)}") from None
+
+    # Determine model if not specified
+    model = request.model
+    if not model:
+        model = _get_default_edit_model(request.provider)
+
+    # Get service based on provider
+    try:
+        service = _get_service(request.provider)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+
+    # Edit image (prompt-based, no mask for JSON endpoint)
+    try:
+        urls = await service.edit_image(
+            image=image_bytes,
+            prompt=request.prompt,
+            model=model,
+            n=request.n,
+        )
+    except Exception as e:
+        logger.error(f"Edit failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Edit failed: {str(e)}") from None
+
+    if not urls:
+        raise HTTPException(status_code=500, detail="No images generated")
+
+    return ImageResponse(
+        image_url=urls[0],
+        prompt=request.prompt,
+        model=model,
+        provider=request.provider,
+        metadata={
+            "all_urls": urls if len(urls) > 1 else None,
+            "n": len(urls),
+            "edit": True,
+            "source_image": request.image_url,
         },
     )
 

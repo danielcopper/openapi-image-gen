@@ -84,8 +84,16 @@ class StorageService:
                 return await f.read()
 
         # External URL - fetch via HTTP
+        headers = {}
+
+        # Add authentication for Open WebUI URLs
+        if settings.openwebui_available and settings.OPENWEBUI_BASE_URL:
+            openwebui_base = settings.OPENWEBUI_BASE_URL.rstrip("/")
+            if url.startswith(openwebui_base):
+                headers["Authorization"] = f"Bearer {settings.OPENWEBUI_API_KEY}"
+
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url)
+            response = await client.get(url, headers=headers)
             response.raise_for_status()
             return response.content
 

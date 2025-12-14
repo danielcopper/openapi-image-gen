@@ -110,6 +110,8 @@ async def test_storage_get_image_external():
     with patch("app.services.storage_service.settings") as mock_settings:
         mock_settings.STORAGE_PATH = "/tmp/test"
         mock_settings.IMAGE_BASE_URL = "http://localhost:8000"
+        mock_settings.openwebui_available = False
+        mock_settings.OPENWEBUI_BASE_URL = None
 
         service = StorageService()
 
@@ -127,7 +129,7 @@ async def test_storage_get_image_external():
             result = await service.get_image("https://example.com/image.png")
 
             assert result == b"external image data"
-            mock_client.get.assert_called_once_with("https://example.com/image.png")
+            mock_client.get.assert_called_once_with("https://example.com/image.png", headers={})
 
 
 def test_get_default_edit_model():

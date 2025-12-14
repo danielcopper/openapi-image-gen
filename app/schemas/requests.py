@@ -67,6 +67,43 @@ class ImageRequest(BaseModel):
     stream: bool = Field(default=False, description="Enable SSE streaming for progress updates")
 
 
+class ImageEditRequest(BaseModel):
+    """
+    Request schema for image editing (JSON endpoint for LLM tool use).
+    """
+
+    image_url: str = Field(
+        ...,
+        description="URL to the image to edit. Use the image_url from a previous generate_image response.",
+        examples=["https://chat.example.com/api/v1/files/abc123/content"],
+    )
+
+    prompt: str = Field(
+        ...,
+        description="Description of the edit to make. Be specific about what should change.",
+        min_length=1,
+        max_length=4000,
+        examples=["Make the sky more dramatic with orange sunset colors"],
+    )
+
+    provider: Literal["litellm", "gemini"] = Field(
+        default="litellm",
+        description="Provider for editing. Use 'litellm' (default) or 'gemini' for prompt-based editing.",
+    )
+
+    model: str | None = Field(
+        default=None,
+        description="Model ID for editing. Server uses default if not specified.",
+    )
+
+    n: int = Field(
+        default=1,
+        ge=1,
+        le=4,
+        description="Number of variations to generate",
+    )
+
+
 class ModelRefreshRequest(BaseModel):
     """
     Request schema for refreshing model registry.
