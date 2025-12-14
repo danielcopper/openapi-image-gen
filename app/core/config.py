@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     # Storage Configuration
     STORAGE_PATH: str = "./generated_images"
     IMAGE_BASE_URL: str = "http://localhost:8000"  # URL where this API serves images
+    SAVE_IMAGES_LOCALLY: bool = True  # Set to false if using Open WebUI exclusively
 
     # Security (Optional)
     API_BEARER_TOKEN: str | None = None

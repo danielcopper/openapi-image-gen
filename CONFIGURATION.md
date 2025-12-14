@@ -37,6 +37,12 @@ Complete configuration reference for the Image Generation API.
 - Default: `./generated_images`
 - Docker: Use volume mount (e.g., `/app/generated_images`)
 
+**`SAVE_IMAGES_LOCALLY`**
+- Whether to save images to local storage
+- Default: `true`
+- Set to `false` if using Open WebUI integration exclusively
+- When `false`, images are only uploaded to Open WebUI (no local backup)
+
 **`IMAGE_BASE_URL`**
 - Public base URL for serving images
 - Default: `http://localhost:8000`

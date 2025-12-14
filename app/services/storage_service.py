@@ -22,7 +22,7 @@ class StorageService:
 
     async def save_image(self, image_data: bytes, extension: str = "png") -> str:
         """
-        Save image bytes to local storage and optionally upload to Open WebUI.
+        Save image bytes to local storage and/or upload to Open WebUI.
 
         Args:
             image_data: Raw image bytes
@@ -32,13 +32,13 @@ class StorageService:
             Public URL to access the image (Open WebUI URL if configured, else local)
         """
         filename = f"{uuid.uuid4()}.{extension}"
-        filepath = self.storage_path / filename
-
-        # Always save locally first
-        async with aiofiles.open(filepath, "wb") as f:
-            await f.write(image_data)
-
         local_url = f"{settings.IMAGE_BASE_URL.rstrip('/')}/images/{filename}"
+
+        # Save locally if configured
+        if settings.SAVE_IMAGES_LOCALLY:
+            filepath = self.storage_path / filename
+            async with aiofiles.open(filepath, "wb") as f:
+                await f.write(image_data)
 
         # Upload to Open WebUI if configured
         if settings.openwebui_available:
@@ -46,10 +46,12 @@ class StorageService:
                 from app.services.openwebui_service import get_openwebui_service
 
                 webui_service = get_openwebui_service()
-                webui_url = await webui_service.upload_image(image_data, filename)
-                return webui_url
+                return await webui_service.upload_image(image_data, filename)
             except Exception as e:
-                logger.warning(f"Open WebUI upload failed, using local URL: {e}")
+                logger.warning(f"Open WebUI upload failed: {e}")
+                if settings.SAVE_IMAGES_LOCALLY:
+                    return local_url
+                raise
 
         return local_url
 
