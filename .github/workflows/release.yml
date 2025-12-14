@@ -28,13 +28,21 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
 
+      - name: Force branch to workflow SHA
+        run: git reset --hard ${{ github.sha }}
+
       - name: Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@v9.15.2
+        uses: python-semantic-release/python-semantic-release@v10.5.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to GitHub Release
+        uses: python-semantic-release/publish-action@v10.5.2
+        if: steps.release.outputs.released == 'true'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag }}
 
   docker:
     needs: release
