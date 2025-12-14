@@ -34,9 +34,7 @@ class StorageService:
 
         relative_url = f"/images/{filename}"
 
-        if settings.BASE_URL:
-            return f"{settings.BASE_URL.rstrip('/')}{relative_url}"
-        return relative_url
+        return f"{settings.IMAGE_BASE_URL.rstrip('/')}{relative_url}"
 
 
 storage_service = StorageService()

@@ -13,7 +13,7 @@ async def test_save_image(temp_storage):
     # Create service with temp storage
     with patch("app.services.storage_service.settings") as mock_settings:
         mock_settings.STORAGE_PATH = str(temp_storage)
-        mock_settings.BASE_URL = "http://localhost:8000"
+        mock_settings.IMAGE_BASE_URL = "http://localhost:8000"
 
         service = StorageService()
 
@@ -42,7 +42,7 @@ async def test_save_image_different_extensions(temp_storage):
     """
     with patch("app.services.storage_service.settings") as mock_settings:
         mock_settings.STORAGE_PATH = str(temp_storage)
-        mock_settings.BASE_URL = "http://localhost:8000"
+        mock_settings.IMAGE_BASE_URL = "http://localhost:8000"
 
         service = StorageService()
 
@@ -53,3 +53,18 @@ async def test_save_image_different_extensions(temp_storage):
 
             filename = url.split("/")[-1]
             assert (temp_storage / filename).exists()
+
+
+@pytest.mark.asyncio
+async def test_save_image_with_custom_base_url(temp_storage):
+    """
+    Test that IMAGE_BASE_URL is used correctly.
+    """
+    with patch("app.services.storage_service.settings") as mock_settings:
+        mock_settings.STORAGE_PATH = str(temp_storage)
+        mock_settings.IMAGE_BASE_URL = "http://image-api:8000"
+
+        service = StorageService()
+        url = await service.save_image(b"test", "png")
+
+        assert url.startswith("http://image-api:8000/images/")
