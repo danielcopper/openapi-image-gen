@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.8.0 (2025-12-15)
+
+### Features
+
+- Simplify image response with MARKDOWN_EMBED_IMAGES config
+  ([`2028018`](https://github.com/danielcopper/openapi-image-gen/commit/20280186508c4b3e0f7af75892f46355e46494d5))
+
+
 ## v0.7.0 (2025-12-14)
 
 ### Features
