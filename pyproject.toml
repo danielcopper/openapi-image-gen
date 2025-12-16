@@ -1,6 +1,6 @@
 [project]
 name = "image-generation-api"
-version = "0.8.1"
+version = "0.9.0"
 description = "Image Generation OpenAPI Server with LiteLLM integration"
 requires-python = ">=3.11"
 dependencies = [

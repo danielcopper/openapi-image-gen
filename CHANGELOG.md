@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.9.0 (2025-12-16)
+
+### Features
+
+- Add OPENWEBUI_MODE for OpenWebUI tool integration
+  ([`ad80069`](https://github.com/danielcopper/openapi-image-gen/commit/ad800692ade5c7b2ee8b33212beaec7e9e801efd))
+
+
 ## v0.8.1 (2025-12-15)
 
 ### Bug Fixes
