@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.9.2 (2025-12-16)
+
+### Bug Fixes
+
+- **openwebui**: Use HTMLResponse with Content-Disposition inline
+  ([`09335d2`](https://github.com/danielcopper/openapi-image-gen/commit/09335d21589241f6c528aff4143a52275972ec65))
+
+
 ## v0.9.1 (2025-12-16)
 
 ### Bug Fixes
