@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.10.0 (2025-12-21)
+
+### Features
+
+- **litellm**: Add direct provider fallback for unsupported features
+  ([`b21a2be`](https://github.com/danielcopper/openapi-image-gen/commit/b21a2be546e51b59b4c01d152009dae830975e53))
+
+
 ## v0.9.2 (2025-12-16)
 
 ### Bug Fixes
