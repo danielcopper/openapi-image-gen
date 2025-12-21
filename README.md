@@ -127,6 +127,18 @@ OPENAI_API_KEY=sk-...
 GEMINI_API_KEY=...
 ```
 
+### Direct Provider Fallback
+
+LiteLLM doesn't support all provider features. Enable `DIRECT_PROVIDER_FALLBACK` to automatically use the native provider API when needed:
+
+```env
+DIRECT_PROVIDER_FALLBACK=true
+GEMINI_API_KEY=...  # Required for Gemini fallback
+```
+
+Currently applies to:
+- **Gemini aspect ratios**: 16:9, 9:16, 4:3, 3:4 (LiteLLM only supports 1:1)
+
 ## Supported Models
 
 ### OpenAI

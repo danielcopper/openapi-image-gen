@@ -58,6 +58,16 @@ class LiteLLMService:
         """
         logger.info(f"Generating {n} image(s) with {model} via LiteLLM")
 
+        # Fallback to direct provider API for unsupported features
+        if self._should_use_direct_provider(model, aspect_ratio):
+            return await self._generate_via_direct_provider(
+                prompt=prompt,
+                model=model,
+                aspect_ratio=aspect_ratio,
+                quality=quality,
+                n=n,
+            )
+
         # Get model capabilities to adjust parameters
         model_info = model_registry.get_model(model)
         size = self._get_size(aspect_ratio)
@@ -167,6 +177,71 @@ class LiteLLMService:
         Convert aspect ratio to OpenAI size format.
         """
         return self.ASPECT_RATIO_SIZES.get(aspect_ratio, "1024x1024")
+
+    def _should_use_direct_provider(self, model: str, aspect_ratio: str) -> bool:
+        """
+        Check if we should use direct provider API instead of LiteLLM.
+
+        Currently applies to:
+        - Gemini models with non-square aspect ratios (LiteLLM doesn't support this)
+        """
+        if not settings.DIRECT_PROVIDER_FALLBACK:
+            return False
+
+        # Gemini: aspect ratios other than 1:1 not supported via LiteLLM
+        if self._is_gemini_model(model) and aspect_ratio != "1:1":
+            if settings.gemini_available:
+                return True
+            logger.warning(
+                f"DIRECT_PROVIDER_FALLBACK enabled but GEMINI_API_KEY not set. "
+                f"Falling back to LiteLLM (aspect_ratio={aspect_ratio} may not work)."
+            )
+
+        return False
+
+    def _is_gemini_model(self, model: str) -> bool:
+        """Check if model is a Gemini/Imagen model."""
+        model_lower = model.lower()
+        return "gemini" in model_lower or "imagen" in model_lower
+
+    def _normalize_gemini_model(self, model: str) -> str:
+        """
+        Normalize Gemini model name for direct API.
+
+        LiteLLM uses "gemini/model-name", direct API uses "model-name".
+        """
+        if model.startswith("gemini/"):
+            return model[7:]
+        return model
+
+    async def _generate_via_direct_provider(
+        self,
+        prompt: str,
+        model: str,
+        aspect_ratio: str,
+        quality: str,
+        n: int,
+    ) -> list[str]:
+        """
+        Generate images via direct provider API.
+
+        Used when LiteLLM doesn't support a required feature.
+        """
+        if self._is_gemini_model(model):
+            from app.services.gemini_service import get_gemini_service
+
+            logger.info(f"Using direct Gemini API for {model} (aspect_ratio={aspect_ratio})")
+            gemini_service = get_gemini_service()
+            return await gemini_service.generate_image(
+                prompt=prompt,
+                model=self._normalize_gemini_model(model),
+                aspect_ratio=aspect_ratio,
+                quality=quality,
+                n=n,
+            )
+
+        # Add other providers here as needed
+        raise ValueError(f"No direct provider fallback available for model: {model}")
 
 
 def get_litellm_service() -> LiteLLMService:

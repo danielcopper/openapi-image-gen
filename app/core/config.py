@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     FILTER_IMAGE_MODELS: bool = True  # Only return image generation models from LiteLLM
     DEFAULT_MODEL: str | None = None  # Default model for image generation
 
+    # Provider Fallback
+    DIRECT_PROVIDER_FALLBACK: bool = False  # Use direct provider API for unsupported LiteLLM features
+
     # Server Configuration
     HOST: str = "0.0.0.0"
     PORT: int = 8000
