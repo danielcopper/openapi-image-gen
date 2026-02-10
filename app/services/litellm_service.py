@@ -80,8 +80,11 @@ class LiteLLMService:
             "prompt": prompt,
             "n": n,
             "size": size,
-            "response_format": "b64_json",
         }
+
+        # response_format is OpenAI-specific; Gemini via LiteLLM doesn't support it
+        if not self._is_gemini_model(model):
+            params["response_format"] = "b64_json"
 
         # Add quality parameter only if model supports it
         if model_info and model_info.capabilities.supports_quality:
@@ -101,7 +104,7 @@ class LiteLLMService:
         # Save images and return URLs
         urls = []
         for image_data in response.data:
-            image_bytes = base64.b64decode(image_data.b64_json)
+            image_bytes = self._extract_image_bytes(image_data)
             url = await storage_service.save_image(image_bytes, "png")
             urls.append(url)
 
@@ -152,8 +155,11 @@ class LiteLLMService:
             "image": image_file,
             "prompt": prompt,
             "n": actual_n,
-            "response_format": "b64_json",
         }
+
+        # response_format is OpenAI-specific; Gemini via LiteLLM doesn't support it
+        if not self._is_gemini_model(model):
+            params["response_format"] = "b64_json"
 
         # Add mask if provided
         if mask:
@@ -167,12 +173,26 @@ class LiteLLMService:
         # Save images and return URLs
         urls = []
         for image_data in response.data:
-            image_bytes = base64.b64decode(image_data.b64_json)
+            image_bytes = self._extract_image_bytes(image_data)
             url = await storage_service.save_image(image_bytes, "png")
             urls.append(url)
 
         logger.info(f"Edited image, generated {len(urls)} result(s)")
         return urls
+
+    @staticmethod
+    def _extract_image_bytes(image_data: Any) -> bytes:
+        """Extract image bytes from a response item (b64_json or url)."""
+        if hasattr(image_data, "b64_json") and image_data.b64_json:
+            return base64.b64decode(image_data.b64_json)
+        if hasattr(image_data, "url") and image_data.url:
+            # URL response — fetch the image
+            import httpx
+
+            response = httpx.get(image_data.url, timeout=30.0)
+            response.raise_for_status()
+            return response.content
+        raise ValueError("Response contains neither b64_json nor url")
 
     def _get_size(self, aspect_ratio: str) -> str:
         """
