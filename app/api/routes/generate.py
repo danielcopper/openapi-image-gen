@@ -66,8 +66,25 @@ async def generate_image(request: ImageRequest, _: None = Depends(verify_token))
     if not urls:
         raise HTTPException(status_code=500, detail="No images generated")
 
-    # OpenWebUI mode: return HTML with embedded image for iframe display
+    # OpenWebUI mode
     if settings.OPENWEBUI_MODE:
+        if settings.openwebui_upload_available:
+            # OWUI upload succeeded — URL is already an OWUI file URL.
+            # Return ImageResponse so the LLM can include the URL in its message.
+            return ImageResponse(
+                image_url=urls[0],
+                markdown=f"![Generated image]({urls[0]})",
+                prompt=request.prompt,
+                model=model,
+                provider=request.provider,
+                metadata={
+                    "aspect_ratio": request.aspect_ratio,
+                    "quality": request.quality,
+                    "n": len(urls),
+                    "all_urls": urls if len(urls) > 1 else None,
+                },
+            )
+        # Fallback: HTMLResponse with base64 (iframe display)
         try:
             image_data, mime_type = await read_image_as_base64(urls[0])
         except FileNotFoundError:

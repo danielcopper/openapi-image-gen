@@ -46,8 +46,12 @@ class Settings(BaseSettings):
     SAVE_IMAGES_LOCALLY: bool = True  # Set to false when using OPENWEBUI_MODE or MARKDOWN_EMBED_IMAGES
 
     # Response Configuration
-    OPENWEBUI_MODE: bool = False  # Return ["data:mime;base64,..."] for OpenWebUI tool integration
+    OPENWEBUI_MODE: bool = False  # Enable OpenWebUI tool integration mode
     MARKDOWN_EMBED_IMAGES: bool = False  # Embed images as base64 data URI in markdown responses
+
+    # Open WebUI Integration
+    OPENWEBUI_BASE_URL: str | None = None  # e.g. http://open-webui:3000
+    OPENWEBUI_API_KEY: str | None = None  # API key for OWUI file upload
 
     # Security (Optional)
     API_BEARER_TOKEN: str | None = None
@@ -78,6 +82,11 @@ class Settings(BaseSettings):
     def gemini_available(self) -> bool:
         """Check if Gemini direct access is available."""
         return bool(self.GEMINI_API_KEY)
+
+    @property
+    def openwebui_upload_available(self) -> bool:
+        """Check if Open WebUI file upload is configured."""
+        return bool(self.OPENWEBUI_BASE_URL and self.OPENWEBUI_API_KEY)
 
 
 settings = Settings()

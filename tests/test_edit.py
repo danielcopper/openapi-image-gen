@@ -59,6 +59,7 @@ async def test_storage_get_image_local(temp_storage):
     with patch("app.services.storage_service.settings") as mock_settings:
         mock_settings.STORAGE_PATH = str(temp_storage)
         mock_settings.IMAGE_BASE_URL = "http://localhost:8000"
+        mock_settings.OPENWEBUI_MODE = False
 
         service = StorageService()
 
@@ -79,6 +80,7 @@ async def test_storage_get_image_local_relative(temp_storage):
     with patch("app.services.storage_service.settings") as mock_settings:
         mock_settings.STORAGE_PATH = str(temp_storage)
         mock_settings.IMAGE_BASE_URL = "http://localhost:8000"
+        mock_settings.OPENWEBUI_MODE = False
 
         service = StorageService()
 

@@ -61,14 +61,29 @@ Complete configuration reference for the Image Generation API.
 **`OPENWEBUI_MODE`**
 - Enable Open WebUI tool integration mode
 - Default: `false`
-- When `true`:
-  - Returns `["data:image/png;base64,..."]` (list with data URI)
-  - OpenWebUI extracts this as a file and displays the image
-  - Overrides `response_format` parameter and `MARKDOWN_EMBED_IMAGES`
-  - Works with OpenWebUI's tool response handling
+- When `true` and `OPENWEBUI_BASE_URL` + `OPENWEBUI_API_KEY` are set:
+  - Uploads images to Open WebUI's file storage via `/api/v1/files/`
+  - Returns JSON with the OWUI file URL and markdown
+  - Images display natively in Open WebUI (with download/save)
+  - Falls back to base64 HTMLResponse if upload fails
+- When `true` without OWUI upload configured:
+  - Returns HTML with base64-encoded `<img>` tag (legacy iframe mode)
 - When `false`:
   - Normal API behavior based on `response_format` parameter
-- Requires: OpenWebUI with `ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION=true`
+
+### Open WebUI Integration
+
+**`OPENWEBUI_BASE_URL`**
+- Open WebUI server URL for file upload integration
+- Example: `http://open-webui:3000` or `http://localhost:3000`
+- Optional - leave empty to use legacy base64 HTMLResponse mode
+- Used with `OPENWEBUI_MODE=true` to upload images directly to OWUI
+
+**`OPENWEBUI_API_KEY`**
+- API key for Open WebUI authentication
+- Required when `OPENWEBUI_BASE_URL` is set
+- Generate in Open WebUI: Settings > Account > API Keys
+- Used for `POST /api/v1/files/` uploads
 
 **`MARKDOWN_EMBED_IMAGES`**
 - Embed images as base64 data URI in markdown responses
@@ -386,10 +401,11 @@ Use after LiteLLM configuration changes.
 
 ## Response Format Reference
 
-| `OPENWEBUI_MODE` | `MARKDOWN_EMBED_IMAGES` | `response_format` | Response |
-|------------------|-------------------------|-------------------|----------|
-| `true` | (ignored) | (ignored) | `["data:image/png;base64,..."]` |
-| `false` | `false` | `url` (default) | `{"image_url": "http://..."}` |
-| `false` | `false` | `base64` | `{"image_base64": "...", "mime_type": "..."}` |
-| `false` | `false` | `markdown` | `{"markdown": "![img](http://...)"}` |
-| `false` | `true` | `markdown` | `{"markdown": "![img](data:...;base64,...)"}` |
+| `OPENWEBUI_MODE` | OWUI Upload | `MARKDOWN_EMBED_IMAGES` | `response_format` | Response |
+|------------------|-------------|-------------------------|-------------------|----------|
+| `true` | configured | (ignored) | (ignored) | `{"image_url": "http://owui/api/v1/files/.../content", "markdown": "![img](...)"}` |
+| `true` | not configured | (ignored) | (ignored) | HTML `<img>` with base64 data URI (iframe) |
+| `false` | — | `false` | `url` (default) | `{"image_url": "http://..."}` |
+| `false` | — | `false` | `base64` | `{"image_base64": "...", "mime_type": "..."}` |
+| `false` | — | `false` | `markdown` | `{"markdown": "![img](http://...)"}` |
+| `false` | — | `true` | `markdown` | `{"markdown": "![img](data:...;base64,...)"}` |

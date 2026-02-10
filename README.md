@@ -171,6 +171,23 @@ See [CONFIGURATION.md](CONFIGURATION.md) for details.
 
 For admin/global tools, configure in Admin Settings with server-accessible URL.
 
+### Native Image Display (Recommended)
+
+For the best experience (images display natively in chat with download/save):
+
+1. Generate an API key in Open WebUI: **Settings > Account > API Keys**
+2. Configure in `.env`:
+
+```env
+OPENWEBUI_MODE=true
+OPENWEBUI_BASE_URL=http://open-webui:3000
+OPENWEBUI_API_KEY=your-owui-api-key
+```
+
+Images are uploaded directly to Open WebUI's file storage and displayed inline, just like the built-in image generation.
+
+Without `OPENWEBUI_BASE_URL`/`OPENWEBUI_API_KEY`, falls back to base64 HTMLResponse (iframe display).
+
 ## API Endpoints
 
 ### Image Generation

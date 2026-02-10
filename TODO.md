@@ -25,12 +25,10 @@ Add models released since the last update:
 - Test with LiteLLM model discovery
 
 ## 3. Improve OWUI Image Display
-Status: PENDING
+Status: DONE
 
-Current approach returns HTMLResponse with base64-encoded `<img>` tag — a workaround
-that went through several iterations. OWUI has had updates since; investigate:
-- Check current OWUI tool response handling (artifact display, image rendering)
-- See if OWUI now natively supports image URLs or base64 in tool responses without HTML hack
-- Consider using OWUI's file upload API to store images there directly
-- Reduce unnecessary disk I/O (currently writes to disk then reads back for base64)
-- Test with latest OWUI version and document the recommended setup
+Added Open WebUI file upload integration:
+- Images uploaded directly to OWUI via `POST /api/v1/files/` when `OPENWEBUI_BASE_URL` + `OPENWEBUI_API_KEY` configured
+- Returns JSON with OWUI file URL — images display natively in chat (with download/save)
+- Graceful fallback to base64 HTMLResponse when OWUI upload not configured or fails
+- Eliminated dependency on `ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION` setting

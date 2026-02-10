@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class StorageService:
     """
-    Handles local file storage for generated images.
+    Handles image storage — local filesystem and Open WebUI file upload.
     """
 
     def __init__(self):
@@ -24,15 +24,35 @@ class StorageService:
 
     async def save_image(self, image_data: bytes, extension: str = "png") -> str:
         """
-        Save image bytes to local storage.
+        Save image bytes to the best available storage.
+
+        When OPENWEBUI_MODE is enabled and OWUI upload is configured, uploads
+        to Open WebUI's file storage and returns an OWUI file URL. Falls back
+        to local storage on failure or when OWUI upload is not configured.
 
         Args:
             image_data: Raw image bytes
             extension: File extension (png, jpg, webp)
 
         Returns:
-            Public URL to access the image
+            Public URL to access the image (OWUI URL or local URL)
         """
+        # Try OWUI upload when in OWUI mode with upload configured
+        if settings.OPENWEBUI_MODE and settings.openwebui_upload_available:
+            try:
+                owui_url = await self._upload_to_openwebui(image_data, extension)
+                # Also save locally if configured
+                if settings.SAVE_IMAGES_LOCALLY:
+                    await self._save_locally(image_data, extension)
+                return owui_url
+            except Exception as e:
+                logger.warning(f"OWUI upload failed, falling back to local storage: {e}")
+
+        # Local storage
+        return await self._save_locally(image_data, extension)
+
+    async def _save_locally(self, image_data: bytes, extension: str = "png") -> str:
+        """Save image bytes to local filesystem."""
         filename = f"{uuid.uuid4()}.{extension}"
         filepath = self.storage_path / filename
 
@@ -40,6 +60,28 @@ class StorageService:
             await f.write(image_data)
 
         return f"{settings.IMAGE_BASE_URL.rstrip('/')}/images/{filename}"
+
+    async def _upload_to_openwebui(self, image_data: bytes, extension: str = "png") -> str:
+        """
+        Upload image to Open WebUI's file storage.
+
+        Returns:
+            OWUI file URL (e.g. http://open-webui:3000/api/v1/files/{id}/content)
+        """
+        filename = f"{uuid.uuid4()}.{extension}"
+        mime_type = f"image/{extension}"
+        base_url = settings.OPENWEBUI_BASE_URL.rstrip("/")
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{base_url}/api/v1/files/",
+                files={"file": (filename, image_data, mime_type)},
+                headers={"Authorization": f"Bearer {settings.OPENWEBUI_API_KEY}"},
+            )
+            response.raise_for_status()
+            file_id = response.json()["id"]
+            logger.info(f"Uploaded image to OWUI: {file_id}")
+            return f"{base_url}/api/v1/files/{file_id}/content"
 
     async def get_image(self, url: str) -> bytes:
         """
