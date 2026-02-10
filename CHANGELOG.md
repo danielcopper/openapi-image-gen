@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v0.11.0 (2026-02-10)
+
+### Features
+
+- Add new models, mark deprecated ones
+  ([`dd45f30`](https://github.com/danielcopper/openapi-image-gen/commit/dd45f307dc3e28360bca31dd0a6ad1d129375b06))
+
+- **owui**: Add native image display via OWUI file upload
+  ([`6d9f408`](https://github.com/danielcopper/openapi-image-gen/commit/6d9f4083dc22be84411cb44925e507e70f263843))
+
+### Refactoring
+
+- Deduplicate helpers, fix security issues, add dev tooling
+  ([`665a719`](https://github.com/danielcopper/openapi-image-gen/commit/665a71947e3abe4171facbdd1450d212d96e549c))
+
+
 ## v0.10.0 (2025-12-21)
 
 ### Features
