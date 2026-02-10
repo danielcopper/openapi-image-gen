@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.11.1 (2026-02-10)
+
+### Bug Fixes
+
+- **litellm**: Skip response_format param for Gemini models
+  ([`7592eba`](https://github.com/danielcopper/openapi-image-gen/commit/7592ebaf94f61fd91fde719c5a263d8fa369886a))
+
+
 ## v0.11.0 (2026-02-10)
 
 ### Features
