@@ -45,13 +45,13 @@ def test_get_default_model_hardcoded_fallback():
 
             from app.api.routes.generate import _get_default_model
 
-            # LiteLLM/OpenAI provider defaults to dall-e-3
+            # LiteLLM/OpenAI provider defaults to gpt-image-1
             result = _get_default_model("litellm")
-            assert result == "dall-e-3"
+            assert result == "gpt-image-1"
 
             result = _get_default_model("openai")
-            assert result == "dall-e-3"
+            assert result == "gpt-image-1"
 
             # Gemini provider defaults to gemini model
             result = _get_default_model("gemini")
-            assert result == "gemini-2.0-flash-preview-image-generation"
+            assert result == "gemini-2.5-flash-image"

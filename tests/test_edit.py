@@ -38,9 +38,17 @@ def test_known_capabilities_editing():
     assert caps["gpt-image-1"].supports_editing is True
     assert caps["gpt-image-1"].editing_type == "mask"
 
+    # GPT-Image-1.5 supports mask-based editing
+    assert caps["gpt-image-1.5"].supports_editing is True
+    assert caps["gpt-image-1.5"].editing_type == "mask"
+
     # Gemini supports prompt-based editing
     assert caps["gemini-2.0-flash-preview-image-generation"].supports_editing is True
     assert caps["gemini-2.0-flash-preview-image-generation"].editing_type == "prompt"
+
+    # Gemini 2.5 Flash supports prompt-based editing
+    assert caps["gemini-2.5-flash-image"].supports_editing is True
+    assert caps["gemini-2.5-flash-image"].editing_type == "prompt"
 
 
 @pytest.mark.asyncio
@@ -216,4 +224,4 @@ def test_get_default_edit_model_fallback():
             # Should return hardcoded defaults
             assert _get_default_edit_model("openai") == "gpt-image-1"
             assert _get_default_edit_model("litellm") == "gpt-image-1"
-            assert _get_default_edit_model("gemini") == "gemini-2.0-flash-preview-image-generation"
+            assert _get_default_edit_model("gemini") == "gemini-2.5-flash-image"

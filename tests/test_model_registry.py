@@ -34,10 +34,13 @@ async def test_load_from_litellm(mock_litellm_models_response):
         with patch("app.services.model_registry.httpx.AsyncClient", return_value=mock_client):
             models = await registry.load_models()
 
-            assert len(models) == 3
-            assert any(m.id == "dall-e-3" for m in models)
+            assert len(models) == 6
+            assert any(m.id == "gpt-image-1.5" for m in models)
             assert any(m.id == "gpt-image-1" for m in models)
-            assert any(m.id.startswith("gemini") for m in models)
+            assert any(m.id == "gpt-image-1-mini" for m in models)
+            assert any(m.id == "dall-e-3" for m in models)
+            assert any(m.id == "gemini-2.5-flash-image" for m in models)
+            assert any(m.id.startswith("gemini-2.0") for m in models)
 
 
 @pytest.mark.asyncio
@@ -108,6 +111,46 @@ def test_get_model_capabilities():
     assert caps.max_images == 4
 
 
+def test_new_model_capabilities():
+    """
+    Test capabilities for newly added models.
+    """
+    registry = ModelRegistry()
+
+    # gpt-image-1.5
+    caps = registry._get_capabilities("gpt-image-1.5")
+    assert caps.supports_quality is True
+    assert caps.quality_values == ["auto", "high", "medium", "low"]
+    assert "2:3" in caps.supports_aspect_ratios
+    assert "3:2" in caps.supports_aspect_ratios
+    assert caps.max_images == 4
+    assert caps.supports_editing is True
+
+    # gemini-2.5-flash-image
+    caps = registry._get_capabilities("gemini-2.5-flash-image")
+    assert caps.supports_editing is True
+    assert caps.editing_type == "prompt"
+    assert "2:3" in caps.supports_aspect_ratios
+
+
+def test_deprecated_models():
+    """
+    Test deprecation flags on models.
+    """
+    registry = ModelRegistry()
+
+    # Deprecated models
+    assert registry._get_capabilities("dall-e-3").deprecated is not None
+    assert "May" in registry._get_capabilities("dall-e-3").deprecated
+    assert registry._get_capabilities("dall-e-2").deprecated is not None
+    assert registry._get_capabilities("gemini-2.0-flash-preview-image-generation").deprecated is not None
+
+    # Active models
+    assert registry._get_capabilities("gpt-image-1").deprecated is None
+    assert registry._get_capabilities("gpt-image-1.5").deprecated is None
+    assert registry._get_capabilities("gemini-2.5-flash-image").deprecated is None
+
+
 def test_infer_provider():
     """
     Test provider inference from model ID.
@@ -116,8 +159,12 @@ def test_infer_provider():
 
     assert registry._infer_provider("dall-e-3") == "openai"
     assert registry._infer_provider("gpt-image-1") == "openai"
+    assert registry._infer_provider("gpt-image-1.5") == "openai"
+    assert registry._infer_provider("gpt-image-1-mini") == "openai"
     assert registry._infer_provider("gemini-2.0-flash") == "gemini"
+    assert registry._infer_provider("gemini-2.5-flash-image") == "gemini"
     assert registry._infer_provider("imagen-3.0") == "gemini"
+    assert registry._infer_provider("imagen-4.0-generate-001") == "gemini"
     assert registry._infer_provider("unknown") == "unknown"
 
 
@@ -130,8 +177,13 @@ def test_is_image_model():
     # Should match image models
     assert registry._is_image_model("dall-e-3") is True
     assert registry._is_image_model("gpt-image-1") is True
+    assert registry._is_image_model("gpt-image-1.5") is True
+    assert registry._is_image_model("gpt-image-1-mini") is True
     assert registry._is_image_model("gemini-2.0-flash-preview-image-generation") is True
+    assert registry._is_image_model("gemini-2.5-flash-image") is True
+    assert registry._is_image_model("gemini-3-pro-image-preview") is True
     assert registry._is_image_model("imagen-3.0") is True
+    assert registry._is_image_model("imagen-4.0-generate-001") is True
 
     # Should NOT match non-image models
     assert registry._is_image_model("gpt-4o") is False

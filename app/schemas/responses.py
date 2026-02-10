@@ -45,6 +45,11 @@ class ModelCapabilities(BaseModel):
         default=False, description="Whether model supports quality parameter"
     )
 
+    quality_values: list[str] | None = Field(
+        default=None,
+        description="Accepted quality values (e.g., ['standard', 'hd'] or ['auto', 'high', 'medium', 'low'])",
+    )
+
     supports_aspect_ratios: list[str] = Field(
         default_factory=lambda: ["1:1"], description="Supported aspect ratios"
     )
@@ -58,6 +63,10 @@ class ModelCapabilities(BaseModel):
     editing_type: Literal["mask", "prompt"] | None = Field(
         default=None,
         description="Type of editing: 'mask' (OpenAI inpainting) or 'prompt' (Gemini natural language)",
+    )
+
+    deprecated: str | None = Field(
+        default=None, description="Deprecation notice with shutdown date, or None if active"
     )
 
 

@@ -34,17 +34,24 @@ class ImageRequest(BaseModel):
         examples=["openai/dall-e-3", "openai/gpt-image-1", "gemini/gemini-2.5-flash-image"],
     )
 
-    aspect_ratio: Literal["1:1", "16:9", "9:16", "4:3", "3:4"] = Field(
+    aspect_ratio: Literal["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2"] = Field(
         default="1:1",
         description=(
             "Image aspect ratio. "
             "1:1 = square, 16:9 = landscape, 9:16 = portrait, "
-            "4:3 = classic landscape, 3:4 = classic portrait"
+            "4:3 = classic landscape, 3:4 = classic portrait, "
+            "2:3 = tall portrait, 3:2 = wide landscape"
         ),
     )
 
-    quality: Literal["standard", "hd"] = Field(
-        default="standard", description="Image quality. 'hd' available for dall-e-3 only"
+    quality: str = Field(
+        default="standard",
+        description=(
+            "Image quality. Values depend on model: "
+            "'standard'/'hd' (dall-e-3), "
+            "'auto'/'high'/'medium'/'low' (gpt-image-1.5). "
+            "Ignored by models that don't support quality."
+        ),
     )
 
     n: int = Field(

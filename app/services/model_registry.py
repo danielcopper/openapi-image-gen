@@ -27,18 +27,22 @@ class ModelRegistry:
 
     # Model capabilities database (fallback for known models)
     KNOWN_CAPABILITIES: dict[str, ModelCapabilities] = {
+        # --- OpenAI ---
         "dall-e-2": ModelCapabilities(
             supports_quality=False,
             supports_aspect_ratios=["1:1"],
             max_images=4,
             supports_editing=True,
             editing_type="mask",
+            deprecated="Shutting down May 12, 2026",
         ),
         "dall-e-3": ModelCapabilities(
             supports_quality=True,
+            quality_values=["standard", "hd"],
             supports_aspect_ratios=["1:1", "16:9", "9:16"],
             max_images=1,
             supports_editing=False,
+            deprecated="Shutting down May 12, 2026",
         ),
         "gpt-image-1": ModelCapabilities(
             supports_quality=False,
@@ -47,16 +51,69 @@ class ModelRegistry:
             supports_editing=True,
             editing_type="mask",
         ),
+        "gpt-image-1.5": ModelCapabilities(
+            supports_quality=True,
+            quality_values=["auto", "high", "medium", "low"],
+            supports_aspect_ratios=["1:1", "2:3", "3:2"],
+            max_images=4,
+            supports_editing=True,
+            editing_type="mask",
+        ),
+        "gpt-image-1-mini": ModelCapabilities(
+            supports_quality=True,
+            quality_values=["low", "medium", "high"],
+            supports_aspect_ratios=["1:1", "16:9", "9:16"],
+            max_images=4,
+            supports_editing=True,
+            editing_type="mask",
+        ),
+        # --- Google Gemini ---
         "gemini-2.0-flash-preview-image-generation": ModelCapabilities(
             supports_quality=False,
             supports_aspect_ratios=["1:1", "16:9", "9:16", "4:3", "3:4"],
             max_images=4,
             supports_editing=True,
             editing_type="prompt",
+            deprecated="Shutting down March 31, 2026",
         ),
+        "gemini-2.5-flash-image": ModelCapabilities(
+            supports_quality=False,
+            supports_aspect_ratios=["1:1", "16:9", "9:16", "4:3", "3:4", "2:3", "3:2"],
+            max_images=4,
+            supports_editing=True,
+            editing_type="prompt",
+        ),
+        "gemini-3-pro-image-preview": ModelCapabilities(
+            supports_quality=False,
+            supports_aspect_ratios=[
+                "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9",
+            ],
+            max_images=4,
+            supports_editing=True,
+            editing_type="prompt",
+        ),
+        # --- Google Imagen (Vertex AI) ---
         "imagen-3.0-generate-002": ModelCapabilities(
             supports_quality=False,
             supports_aspect_ratios=["1:1", "16:9", "9:16", "4:3", "3:4"],
+            max_images=4,
+            supports_editing=False,
+        ),
+        "imagen-4.0-generate-001": ModelCapabilities(
+            supports_quality=False,
+            supports_aspect_ratios=["1:1", "3:4", "4:3", "9:16", "16:9"],
+            max_images=4,
+            supports_editing=False,
+        ),
+        "imagen-4.0-ultra-generate-001": ModelCapabilities(
+            supports_quality=False,
+            supports_aspect_ratios=["1:1", "3:4", "4:3", "9:16", "16:9"],
+            max_images=1,
+            supports_editing=False,
+        ),
+        "imagen-4.0-fast-generate-001": ModelCapabilities(
+            supports_quality=False,
+            supports_aspect_ratios=["1:1", "3:4", "4:3", "9:16", "16:9"],
             max_images=4,
             supports_editing=False,
         ),
@@ -177,7 +234,13 @@ class ModelRegistry:
 
         # OpenAI models
         if settings.openai_available or settings.litellm_available:
-            for model_id in ["dall-e-3", "gpt-image-1", "dall-e-2"]:
+            for model_id in [
+                "gpt-image-1.5",
+                "gpt-image-1",
+                "gpt-image-1-mini",
+                "dall-e-3",
+                "dall-e-2",
+            ]:
                 models.append(
                     ModelInfo(
                         id=model_id,
@@ -186,9 +249,11 @@ class ModelRegistry:
                     )
                 )
 
-        # Gemini models
+        # Gemini models (Imagen 4 excluded — Vertex AI only, discovered via LiteLLM)
         if settings.gemini_available or settings.litellm_available:
             for model_id in [
+                "gemini-2.5-flash-image",
+                "gemini-3-pro-image-preview",
                 "gemini-2.0-flash-preview-image-generation",
                 "imagen-3.0-generate-002",
             ]:

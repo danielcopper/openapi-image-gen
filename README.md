@@ -6,7 +6,7 @@ OpenAPI server for AI image generation and editing. Supports LiteLLM proxy (for 
 
 - **Image Generation**: Create images from text prompts
 - **Image Editing**: Edit existing images with mask-based inpainting (OpenAI) or prompt-based editing (Gemini)
-- **Multi-Provider**: OpenAI (DALL-E 3, GPT-Image-1) and Google Gemini
+- **Multi-Provider**: OpenAI (GPT-Image-1.5, GPT-Image-1) and Google Gemini
 - **LiteLLM Integration**: Unified API with cost tracking
 - **Open WebUI Integration**: Auto-upload images to Open WebUI's file storage
 - **Dynamic Models**: Auto-discovers available models from LiteLLM
@@ -67,7 +67,7 @@ curl -X POST "http://localhost:8000/generate" \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "A mountain landscape at sunset",
-    "model": "dall-e-3",
+    "model": "gpt-image-1",
     "aspect_ratio": "16:9"
   }'
 ```
@@ -145,15 +145,19 @@ Currently applies to:
 
 | Model | Generation | Editing | Notes |
 |-------|------------|---------|-------|
-| dall-e-3 | Yes | No | HD quality, multiple aspect ratios |
+| gpt-image-1.5 | Yes | Yes (mask) | Latest, quality: auto/high/medium/low |
 | gpt-image-1 | Yes | Yes (mask) | Fast, supports inpainting |
-| dall-e-2 | Yes | Yes (mask) | Square only |
+| gpt-image-1-mini | Yes | Yes (mask) | Cost-efficient variant |
+| ~~dall-e-3~~ | Yes | No | **Deprecated** — shutting down May 12, 2026 |
+| ~~dall-e-2~~ | Yes | Yes (mask) | **Deprecated** — shutting down May 12, 2026 |
 
 ### Google Gemini
 
 | Model | Generation | Editing | Notes |
 |-------|------------|---------|-------|
-| gemini-2.0-flash-preview-image-generation | Yes | Yes (prompt) | Fast, prompt-based editing |
+| gemini-2.5-flash-image | Yes | Yes (prompt) | Fast, wide aspect ratio support |
+| gemini-3-pro-image-preview | Yes | Yes (prompt) | Preview, up to 4K resolution |
+| ~~gemini-2.0-flash-preview-image-generation~~ | Yes | Yes (prompt) | **Deprecated** — shutting down March 31, 2026 |
 
 See [CONFIGURATION.md](CONFIGURATION.md) for details.
 

@@ -59,8 +59,11 @@ def mock_litellm_models_response():
     """
     return {
         "data": [
-            {"id": "dall-e-3"},
+            {"id": "gpt-image-1.5"},
             {"id": "gpt-image-1"},
+            {"id": "gpt-image-1-mini"},
+            {"id": "dall-e-3"},
+            {"id": "gemini-2.5-flash-image"},
             {"id": "gemini-2.0-flash-preview-image-generation"},
         ]
     }

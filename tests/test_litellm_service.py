@@ -18,15 +18,19 @@ class TestIsGeminiModel:
     def test_gemini_model(self, service):
         assert service._is_gemini_model("gemini-2.0-flash-preview-image-generation") is True
         assert service._is_gemini_model("gemini/gemini-2.0-flash-exp") is True
+        assert service._is_gemini_model("gemini-2.5-flash-image") is True
+        assert service._is_gemini_model("gemini-3-pro-image-preview") is True
         assert service._is_gemini_model("GEMINI-MODEL") is True
 
     def test_imagen_model(self, service):
         assert service._is_gemini_model("imagen-3.0-generate-002") is True
+        assert service._is_gemini_model("imagen-4.0-generate-001") is True
         assert service._is_gemini_model("vertex/imagen-3") is True
 
     def test_non_gemini_model(self, service):
         assert service._is_gemini_model("dall-e-3") is False
         assert service._is_gemini_model("gpt-image-1") is False
+        assert service._is_gemini_model("gpt-image-1.5") is False
         assert service._is_gemini_model("stable-diffusion") is False
 
 

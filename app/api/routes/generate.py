@@ -314,11 +314,11 @@ def _get_default_model(provider: str) -> str:
     if not provider_models:
         # Fallback defaults
         if provider == "openai" or provider == "litellm":
-            return "dall-e-3"
+            return "gpt-image-1"
         elif provider == "gemini":
-            return "gemini-2.0-flash-preview-image-generation"
+            return "gemini-2.5-flash-image"
         else:
-            return "dall-e-3"
+            return "gpt-image-1"
 
     # Return first available model
     return provider_models[0].id

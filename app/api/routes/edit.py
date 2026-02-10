@@ -268,6 +268,6 @@ def _get_default_edit_model(provider: str) -> str:
 
     # Fallback defaults
     if provider == "gemini":
-        return "gemini-2.0-flash-preview-image-generation"
+        return "gemini-2.5-flash-image"
     else:
         return "gpt-image-1"

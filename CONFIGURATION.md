@@ -53,7 +53,7 @@ Complete configuration reference for the Image Generation API.
 
 **`DEFAULT_MODEL`**
 - Default model for generation/editing when not specified in request
-- Example: `gpt-image-1`, `dall-e-3`
+- Example: `gpt-image-1`, `gpt-image-1.5`
 - Optional - if not set, first available model is used
 
 ### Response Configuration
@@ -109,17 +109,11 @@ Complete configuration reference for the Image Generation API.
 
 ### OpenAI Models
 
-**dall-e-2**
-- Aspect Ratios: `1:1` only
-- Quality: Not supported
+**gpt-image-1.5** (latest)
+- Aspect Ratios: `1:1`, `2:3`, `3:2`
+- Quality: `auto`, `high`, `medium`, `low`
 - Max Images (n): 4
 - Editing: Yes (mask-based)
-
-**dall-e-3**
-- Aspect Ratios: `1:1`, `16:9`, `9:16`
-- Quality: `standard`, `hd`
-- Max Images (n): 1
-- Editing: No
 
 **gpt-image-1**
 - Aspect Ratios: `1:1`, `16:9`, `9:16`
@@ -127,9 +121,39 @@ Complete configuration reference for the Image Generation API.
 - Max Images (n): 4
 - Editing: Yes (mask-based)
 
+**gpt-image-1-mini**
+- Aspect Ratios: `1:1`, `16:9`, `9:16`
+- Quality: `low`, `medium`, `high`
+- Max Images (n): 4
+- Editing: Yes (mask-based)
+
+**dall-e-3** *(deprecated — shutting down May 12, 2026)*
+- Aspect Ratios: `1:1`, `16:9`, `9:16`
+- Quality: `standard`, `hd`
+- Max Images (n): 1
+- Editing: No
+
+**dall-e-2** *(deprecated — shutting down May 12, 2026)*
+- Aspect Ratios: `1:1` only
+- Quality: Not supported
+- Max Images (n): 4
+- Editing: Yes (mask-based)
+
 ### Google Gemini Models
 
-**gemini-2.0-flash-preview-image-generation**
+**gemini-2.5-flash-image** (recommended)
+- Aspect Ratios: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2:3`, `3:2`
+- Quality: Not supported
+- Max Images (n): 4
+- Editing: Yes (prompt-based)
+
+**gemini-3-pro-image-preview** (preview)
+- Aspect Ratios: `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`
+- Quality: Not supported
+- Max Images (n): 4
+- Editing: Yes (prompt-based)
+
+**gemini-2.0-flash-preview-image-generation** *(deprecated — shutting down March 31, 2026)*
 - Aspect Ratios: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`
 - Quality: Not supported
 - Max Images (n): 4
@@ -187,7 +211,7 @@ Set `provider="openai"` or `provider="gemini"` in requests.
 
 ```json
 {
-  "model": "dall-e-3"  // or null for auto-select
+  "model": "gpt-image-1"  // or null for auto-select
 }
 ```
 
@@ -201,13 +225,15 @@ Leave `null` to use first available model for provider.
 }
 ```
 
-Options: `1:1`, `16:9` (landscape), `9:16` (portrait), `4:3`, `3:4`
+Options: `1:1`, `16:9` (landscape), `9:16` (portrait), `4:3`, `3:4`, `2:3` (tall portrait), `3:2` (wide landscape)
 
 Model compatibility:
-- dall-e-2: `1:1` only
-- dall-e-3: `1:1`, `16:9`, `9:16`
-- gpt-image-1: `1:1`, `16:9`, `9:16`
-- Gemini models: All ratios
+- gpt-image-1.5: `1:1`, `2:3`, `3:2`
+- gpt-image-1 / gpt-image-1-mini: `1:1`, `16:9`, `9:16`
+- gemini-2.5-flash-image: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2:3`, `3:2`
+- gemini-3-pro-image-preview: All 10 ratios including `4:5`, `5:4`, `21:9`
+- dall-e-3 (deprecated): `1:1`, `16:9`, `9:16`
+- dall-e-2 (deprecated): `1:1` only
 
 ### Quality
 
@@ -217,8 +243,11 @@ Model compatibility:
 }
 ```
 
-- `standard`: Faster generation
-- `hd`: Higher detail (dall-e-3 only)
+Values depend on model:
+- dall-e-3: `standard`, `hd`
+- gpt-image-1.5: `auto`, `high`, `medium`, `low`
+- gpt-image-1-mini: `low`, `medium`, `high`
+- Other models: quality parameter ignored
 
 ### Number of Images
 
@@ -230,6 +259,7 @@ Model compatibility:
 
 Constraints:
 - dall-e-3: max 1
+- imagen-4.0-ultra: max 1
 - Others: max 4
 
 ## Image Editing
@@ -238,7 +268,7 @@ The `/edit` endpoint supports two editing modes:
 
 ### Mask-based Editing (OpenAI)
 
-Used with `dall-e-2` and `gpt-image-1`. Requires:
+Used with `gpt-image-1`, `gpt-image-1.5`, `gpt-image-1-mini`, and `dall-e-2`. Requires:
 - `image`: Source image (upload or URL)
 - `mask`: PNG with transparent areas marking regions to edit
 - `prompt`: Description of what to generate in masked area
@@ -247,7 +277,7 @@ The mask should have transparent (alpha=0) pixels where editing should occur.
 
 ### Prompt-based Editing (Gemini)
 
-Used with `gemini-2.0-flash-preview-image-generation`. Requires:
+Used with `gemini-2.5-flash-image`, `gemini-3-pro-image-preview`, and other Gemini models. Requires:
 - `image`: Source image (upload or URL)
 - `prompt`: Natural language description of the edit
 
