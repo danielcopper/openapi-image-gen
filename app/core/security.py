@@ -1,3 +1,4 @@
+import secrets
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -28,7 +29,7 @@ async def verify_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if credentials.credentials != settings.API_BEARER_TOKEN:
+    if not secrets.compare_digest(credentials.credentials, settings.API_BEARER_TOKEN):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token",

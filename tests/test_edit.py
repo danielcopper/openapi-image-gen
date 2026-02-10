@@ -104,6 +104,8 @@ async def test_storage_get_image_not_found(temp_storage):
 @pytest.mark.asyncio
 async def test_storage_get_image_external():
     """Test getting image from external URL."""
+    import socket
+
     from app.services.storage_service import StorageService
 
     with patch("app.services.storage_service.settings") as mock_settings:
@@ -122,11 +124,60 @@ async def test_storage_get_image_external():
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
 
-        with patch("app.services.storage_service.httpx.AsyncClient", return_value=mock_client):
+        # Mock DNS to return a public IP so SSRF check passes
+        public_addrinfo = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("93.184.216.34", 0))]
+
+        with (
+            patch("app.services.storage_service.socket.getaddrinfo", return_value=public_addrinfo),
+            patch("app.services.storage_service.httpx.AsyncClient", return_value=mock_client),
+        ):
             result = await service.get_image("https://example.com/image.png")
 
             assert result == b"external image data"
             mock_client.get.assert_called_once_with("https://example.com/image.png")
+
+
+@pytest.mark.asyncio
+async def test_storage_get_image_blocks_private_ip():
+    """Test that SSRF protection blocks private/internal IPs."""
+    import socket
+
+    from app.services.storage_service import StorageService
+
+    with patch("app.services.storage_service.settings") as mock_settings:
+        mock_settings.STORAGE_PATH = "/tmp/test"
+        mock_settings.IMAGE_BASE_URL = "http://localhost:8000"
+
+        service = StorageService()
+
+        blocked_ips = [
+            ("127.0.0.1", "loopback"),
+            ("10.0.0.1", "private class A"),
+            ("192.168.1.1", "private class C"),
+            ("169.254.169.254", "cloud metadata endpoint"),
+        ]
+
+        for ip, _description in blocked_ips:
+            addrinfo = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", (ip, 0))]
+            with (
+                patch(
+                    "app.services.storage_service.socket.getaddrinfo", return_value=addrinfo
+                ),
+                pytest.raises(ValueError, match="blocked address"),
+            ):
+                await service.get_image("https://evil.com/image.png")
+
+
+def test_storage_validate_rejects_non_http_scheme():
+    """Test that non-HTTP schemes are rejected."""
+    from app.services.storage_service import StorageService
+
+    with patch("app.services.storage_service.settings") as mock_settings:
+        mock_settings.STORAGE_PATH = "/tmp/test"
+        service = StorageService()
+
+        with pytest.raises(ValueError, match="scheme must be http or https"):
+            service._validate_external_url("ftp://example.com/image.png")
 
 
 def test_get_default_edit_model():

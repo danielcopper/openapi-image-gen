@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 import time
@@ -64,6 +65,7 @@ class ModelRegistry:
     def __init__(self):
         self._models: list[ModelInfo] = []
         self._cache_timestamp: float | None = None
+        self._load_lock = asyncio.Lock()
 
     @property
     def cache_valid(self) -> bool:
@@ -105,26 +107,31 @@ class ModelRegistry:
             logger.debug("Returning cached models")
             return self._models
 
-        logger.info("Loading models from LiteLLM")
-        models = []
+        async with self._load_lock:
+            # Re-check after acquiring lock (another coroutine may have loaded)
+            if not force and self.cache_valid:
+                return self._models
 
-        # Try loading from LiteLLM if configured
-        if settings.litellm_available:
-            try:
-                models = await self._load_from_litellm()
-                logger.info(f"Loaded {len(models)} models from LiteLLM")
-            except Exception as e:
-                logger.warning(f"Failed to load models from LiteLLM: {e}")
+            logger.info("Loading models from LiteLLM")
+            models = []
 
-        # Fallback to static known models if LiteLLM failed or not configured
-        if not models:
-            logger.info("Using static model list")
-            models = self._get_static_models()
+            # Try loading from LiteLLM if configured
+            if settings.litellm_available:
+                try:
+                    models = await self._load_from_litellm()
+                    logger.info(f"Loaded {len(models)} models from LiteLLM")
+                except Exception as e:
+                    logger.warning(f"Failed to load models from LiteLLM: {e}")
 
-        self._models = models
-        self._cache_timestamp = time.time()
+            # Fallback to static known models if LiteLLM failed or not configured
+            if not models:
+                logger.info("Using static model list")
+                models = self._get_static_models()
 
-        return self._models
+            self._models = models
+            self._cache_timestamp = time.time()
+
+            return self._models
 
     async def _load_from_litellm(self) -> list[ModelInfo]:
         """

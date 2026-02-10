@@ -137,43 +137,45 @@ class TestGenerateImageWithFallback:
             mock_settings.DIRECT_PROVIDER_FALLBACK = True
             mock_settings.gemini_available = True
 
-            with patch.object(service.client.images, "generate", return_value=mock_openai_response):
-                with patch("app.services.litellm_service.model_registry") as mock_registry:
-                    mock_registry.get_model.return_value = None
+            with (
+                patch.object(service.client.images, "generate", return_value=mock_openai_response),
+                patch("app.services.litellm_service.model_registry") as mock_registry,
+                patch("app.services.litellm_service.storage_service") as mock_storage,
+            ):
+                mock_registry.get_model.return_value = None
+                mock_storage.save_image = AsyncMock(return_value="http://example.com/image.png")
 
-                    with patch("app.services.litellm_service.storage_service") as mock_storage:
-                        mock_storage.save_image = AsyncMock(return_value="http://example.com/image.png")
+                result = await service.generate_image(
+                    prompt="test prompt",
+                    model="gemini/gemini-2.0-flash-exp",
+                    aspect_ratio="1:1",
+                    quality="standard",
+                    n=1,
+                )
 
-                        result = await service.generate_image(
-                            prompt="test prompt",
-                            model="gemini/gemini-2.0-flash-exp",
-                            aspect_ratio="1:1",
-                            quality="standard",
-                            n=1,
-                        )
-
-                        assert result == ["http://example.com/image.png"]
-                        service.client.images.generate.assert_called_once()
+                assert result == ["http://example.com/image.png"]
+                service.client.images.generate.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_uses_litellm_when_fallback_disabled(self, service, mock_openai_response):
         with patch("app.services.litellm_service.settings") as mock_settings:
             mock_settings.DIRECT_PROVIDER_FALLBACK = False
 
-            with patch.object(service.client.images, "generate", return_value=mock_openai_response):
-                with patch("app.services.litellm_service.model_registry") as mock_registry:
-                    mock_registry.get_model.return_value = None
+            with (
+                patch.object(service.client.images, "generate", return_value=mock_openai_response),
+                patch("app.services.litellm_service.model_registry") as mock_registry,
+                patch("app.services.litellm_service.storage_service") as mock_storage,
+            ):
+                mock_registry.get_model.return_value = None
+                mock_storage.save_image = AsyncMock(return_value="http://example.com/image.png")
 
-                    with patch("app.services.litellm_service.storage_service") as mock_storage:
-                        mock_storage.save_image = AsyncMock(return_value="http://example.com/image.png")
+                result = await service.generate_image(
+                    prompt="test prompt",
+                    model="gemini/gemini-2.0-flash-exp",
+                    aspect_ratio="16:9",
+                    quality="standard",
+                    n=1,
+                )
 
-                        result = await service.generate_image(
-                            prompt="test prompt",
-                            model="gemini/gemini-2.0-flash-exp",
-                            aspect_ratio="16:9",
-                            quality="standard",
-                            n=1,
-                        )
-
-                        assert result == ["http://example.com/image.png"]
-                        service.client.images.generate.assert_called_once()
+                assert result == ["http://example.com/image.png"]
+                service.client.images.generate.assert_called_once()

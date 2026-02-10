@@ -1,6 +1,9 @@
+import ipaddress
 import logging
+import socket
 import uuid
 from pathlib import Path
+from urllib.parse import urlparse
 
 import aiofiles
 import httpx
@@ -66,11 +69,34 @@ class StorageService:
             async with aiofiles.open(filepath, "rb") as f:
                 return await f.read()
 
-        # External URL - fetch via HTTP
+        # External URL - validate and fetch via HTTP
+        self._validate_external_url(url)
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(url)
             response.raise_for_status()
             return response.content
+
+    @staticmethod
+    def _validate_external_url(url: str) -> None:
+        """Validate that an external URL doesn't point to internal/private networks."""
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError(f"URL scheme must be http or https, got: {parsed.scheme}")
+
+        hostname = parsed.hostname
+        if not hostname:
+            raise ValueError("URL must include a hostname")
+
+        # Resolve hostname and check all returned IPs
+        try:
+            addrinfo = socket.getaddrinfo(hostname, None)
+        except socket.gaierror as e:
+            raise ValueError(f"Cannot resolve hostname: {hostname}") from e
+
+        for _family, _, _, _, sockaddr in addrinfo:
+            ip = ipaddress.ip_address(sockaddr[0])
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+                raise ValueError(f"URL resolves to blocked address: {ip}")
 
 
 storage_service = StorageService()

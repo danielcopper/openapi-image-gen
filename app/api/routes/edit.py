@@ -1,21 +1,16 @@
-import base64
-import contextlib
 import logging
-from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse
 
+from app.api.dependencies import get_service
 from app.core.config import settings
 from app.core.security import verify_token
 from app.schemas.requests import ImageEditRequest
 from app.schemas.responses import ImageResponse
-from app.services.gemini_service import get_gemini_service
-from app.services.litellm_service import get_litellm_service
 from app.services.model_registry import model_registry
-from app.services.openai_service import get_openai_service
 from app.services.storage_service import storage_service
+from app.utils.image import build_openwebui_html_response, read_image_as_base64
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +81,7 @@ async def edit_image(
 
     # Get service based on provider
     try:
-        service = _get_service(provider)
+        service = get_service(provider)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
 
@@ -118,18 +113,10 @@ async def edit_image(
 
     # Handle response format
     if response_format == "base64":
-        image_filename = urls[0].split("/")[-1]
-        image_path = Path(settings.STORAGE_PATH) / image_filename
-
-        if not image_path.exists():
-            raise HTTPException(status_code=500, detail="Edited image file not found")
-
-        with open(image_path, "rb") as f:
-            image_data = base64.b64encode(f.read()).decode("utf-8")
-
-        ext = image_path.suffix.lower()
-        mime_types = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
-        mime_type = mime_types.get(ext, "image/png")
+        try:
+            image_data, mime_type = await read_image_as_base64(urls[0], cleanup=False)
+        except FileNotFoundError:
+            raise HTTPException(status_code=500, detail="Edited image file not found") from None
 
         return ImageResponse(
             image_base64=image_data,
@@ -201,7 +188,7 @@ async def edit_image_json(
 
     # Get service based on provider
     try:
-        service = _get_service(request.provider)
+        service = get_service(request.provider)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
 
@@ -222,47 +209,18 @@ async def edit_image_json(
 
     # OpenWebUI mode: return HTML with embedded image for iframe display
     if settings.OPENWEBUI_MODE:
-        image_filename = urls[0].split("/")[-1]
-        image_path = Path(settings.STORAGE_PATH) / image_filename
-
-        if not image_path.exists():
-            raise HTTPException(status_code=500, detail="Edited image file not found")
-
-        with open(image_path, "rb") as f:
-            image_data = base64.b64encode(f.read()).decode("utf-8")
-
-        # Clean up local file if not saving locally
-        if not settings.SAVE_IMAGES_LOCALLY:
-            with contextlib.suppress(Exception):
-                image_path.unlink()
-
-        ext = image_path.suffix.lower()
-        mime_types = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
-        mime_type = mime_types.get(ext, "image/png")
-
-        html = f'<img src="data:{mime_type};base64,{image_data}" style="max-width:100%; height:auto;">'
-        return HTMLResponse(content=html, headers={"Content-Disposition": "inline"})
+        try:
+            image_data, mime_type = await read_image_as_base64(urls[0])
+        except FileNotFoundError:
+            raise HTTPException(status_code=500, detail="Edited image file not found") from None
+        return build_openwebui_html_response(image_data, mime_type)
 
     # Return based on MARKDOWN_EMBED_IMAGES setting
     if settings.MARKDOWN_EMBED_IMAGES:
-        # Return markdown with embedded base64 data URI
-        image_filename = urls[0].split("/")[-1]
-        image_path = Path(settings.STORAGE_PATH) / image_filename
-
-        if not image_path.exists():
-            raise HTTPException(status_code=500, detail="Edited image file not found")
-
-        with open(image_path, "rb") as f:
-            image_data = base64.b64encode(f.read()).decode("utf-8")
-
-        # Clean up local file if not saving locally
-        if not settings.SAVE_IMAGES_LOCALLY:
-            with contextlib.suppress(Exception):
-                image_path.unlink()
-
-        ext = image_path.suffix.lower()
-        mime_types = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
-        mime_type = mime_types.get(ext, "image/png")
+        try:
+            image_data, mime_type = await read_image_as_base64(urls[0])
+        except FileNotFoundError:
+            raise HTTPException(status_code=500, detail="Edited image file not found") from None
 
         markdown = f"![Edited image](data:{mime_type};base64,{image_data})"
         return ImageResponse(
@@ -292,24 +250,6 @@ async def edit_image_json(
                 "source_image": request.image_url,
             },
         )
-
-
-def _get_service(provider: str):
-    """Get service instance based on provider."""
-    if provider == "litellm":
-        if not settings.litellm_available:
-            raise ValueError("LiteLLM not configured. Set LITELLM_BASE_URL")
-        return get_litellm_service()
-    elif provider == "openai":
-        if not settings.openai_available:
-            raise ValueError("OpenAI not configured. Set OPENAI_API_KEY")
-        return get_openai_service()
-    elif provider == "gemini":
-        if not settings.gemini_available:
-            raise ValueError("Gemini not configured. Set GEMINI_API_KEY")
-        return get_gemini_service()
-    else:
-        raise ValueError(f"Unknown provider: {provider}")
 
 
 def _get_default_edit_model(provider: str) -> str:
